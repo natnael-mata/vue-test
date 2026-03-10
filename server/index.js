@@ -18,24 +18,25 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/vue-test', 
 // Define User Schema
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true }
+    email: { type: String, required: true },
+    phone: { type: String, required: true }
 });
 
 const User = mongoose.model('User', UserSchema);
 
 // Handle new form submission
 app.post('/api/contact', async (req, res) => {
-    const { name, email } = req.body;
+    const { name, email, phone } = req.body;
 
-    if (!name || !email) {
-        return res.status(400).json({ message: 'Name and email are required.' });
+    if (!name || !email || !phone) {
+        return res.status(400).json({ message: 'Name, email, and phone are required.' });
     }
 
     try {
-        // const newUser = new User({ name, email });
+        // const newUser = new User({ name, email, phone });
         // await newUser.save();
-        console.log(`Received user: ${name} (${email})`);
-        res.status(200).json({ message: `hello ${name} and ur email is ${email}` });
+        console.log(`Received user: ${name} (${email}, ${phone})`);
+        res.status(200).json({ message: `hello ${name} ur email is ${email} and phone is ${phone}` });
     } catch (error) {
         console.error('Error saving user:', error);
         res.status(500).json({ message: 'Failed to process request.' });

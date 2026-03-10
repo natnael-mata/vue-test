@@ -5,7 +5,7 @@
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
       <div class="bg-indigo-600 px-6 py-8 text-center text-white relative">
         <div class="absolute inset-0 bg-indigo-700 opacity-20 transform -skew-y-3"></div>
-        <h2 class="text-3xl font-extrabold mb-2 relative z-10">Get in Touch</h2>
+        <h2 class="text-3xl font-extrabold mb-2 relative z-10">Alet test</h2>
         <p class="text-indigo-200 text-sm relative z-10">We'd love to hear from you.</p>
       </div>
       
@@ -32,6 +32,18 @@
               required
               class="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200"
               placeholder="john@example.com"
+            />
+          </div>
+
+          <div>
+            <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+            <input 
+              v-model="form.phone" 
+              type="tel" 
+              id="phone" 
+              required
+              class="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200"
+              placeholder="+1234567890"
             />
           </div>
 
@@ -66,12 +78,14 @@
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="user in users" :key="user._id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.name }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.email }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.phone }}</td>
             </tr>
           </tbody>
         </table>
@@ -97,7 +111,8 @@ import { reactive, ref, onMounted } from 'vue'
 
 const form = reactive({
   name: '',
-  email: ''
+  email: '',
+  phone: ''
 })
 
 const isSubmitting = ref(false)
@@ -141,6 +156,7 @@ const submitForm = async () => {
       message.value = data.message || 'Success!'
       form.name = ''
       form.email = ''
+      form.phone = ''
       
       // Refresh the table with new data (temporarily disabled)
       // await fetchUsers()
