@@ -1,22 +1,29 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const nodemailer = require('nodemailer');
+const mongoose = require('mongoose');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Setup nodemailer transporter using Gmail
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/vue-test', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => console.log('MongoDB connected'))
+    .catch(err => console.error('MongoDB connection error. Ensure MongoDB is running:', err));
+
+// Define User Schema
+const UserSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true }
 });
 
+const User = mongoose.model('User', UserSchema);
+
+// Handle new form submission
 app.post('/api/contact', async (req, res) => {
     const { name, email } = req.body;
 
@@ -24,20 +31,25 @@ app.post('/api/contact', async (req, res) => {
         return res.status(400).json({ message: 'Name and email are required.' });
     }
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: 'nati.sami.mata@gmail.com',         // Target recipient
-        subject: `New Contact Form Submission from ${name}`,
-        text: `You have received a new message.\n\nName: ${name}\nEmail: ${email}`
-    };
-
     try {
-        await transporter.sendMail(mailOptions);
-        console.log(`Email successfully sent from ${name} (${email})`);
-        res.status(200).json({ message: 'Email sent successfully!' });
+        // const newUser = new User({ name, email });
+        // await newUser.save();
+        console.log(`Received user: ${name} (${email})`);
+        res.status(200).json({ message: `hello ${name} and ur email is ${email}` });
     } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).json({ message: 'Failed to send email. Ensure your App Password is correct.' });
+        console.error('Error saving user:', error);
+        res.status(500).json({ message: 'Failed to process request.' });
+    }
+});
+
+// Fetch all users
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Failed to fetch users.' });
     }
 });
 

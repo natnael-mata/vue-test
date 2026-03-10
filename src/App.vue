@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
+  <div class="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 font-sans space-y-8">
+    
+    <!-- Contact Form -->
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
       <div class="bg-indigo-600 px-6 py-8 text-center text-white relative">
         <div class="absolute inset-0 bg-indigo-700 opacity-20 transform -skew-y-3"></div>
@@ -39,7 +41,7 @@
             class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-95"
           >
             <span v-if="isSubmitting" class="inline-block animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></span>
-            {{ isSubmitting ? 'Sending...' : 'Send Message' }}
+            {{ isSubmitting ? 'Saving...' : 'Submit to DB' }}
           </button>
         </form>
 
@@ -50,11 +52,48 @@
         </transition>
       </div>
     </div>
+
+    <!-- MongoDB Records Table -->
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Registered Users</h3>
+      
+      <div v-if="users.length === 0" class="text-center text-gray-500 py-4">
+        No users found in Database.
+      </div>
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="user in users" :key="user._id" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.email }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6 flex justify-center">
+        <button 
+          @click="fetchUsers"
+          :disabled="isFetching"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-200 shadow hover:shadow-md flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-95"
+        >
+          <span v-if="isFetching" class="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+          Refresh Database
+        </button>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 
 const form = reactive({
   name: '',
@@ -62,8 +101,24 @@ const form = reactive({
 })
 
 const isSubmitting = ref(false)
+const isFetching = ref(false)
 const message = ref('')
 const isSuccess = ref(false)
+const users = ref([])
+
+const fetchUsers = async () => {
+  isFetching.value = true
+  try {
+    const response = await fetch('http://localhost:3000/api/users')
+    if (response.ok) {
+      users.value = await response.json()
+    }
+  } catch (error) {
+    console.error("Failed to fetch users", error)
+  } finally {
+    isFetching.value = false
+  }
+}
 
 const submitForm = async () => {
   isSubmitting.value = true
@@ -78,28 +133,36 @@ const submitForm = async () => {
       body: JSON.stringify(form)
     })
     
+    // Parse the JSON data from both success or error response
+    const data = await response.json()
+    
     if (response.ok) {
       isSuccess.value = true
-      message.value = 'Email sent successfully!'
+      message.value = data.message || 'Success!'
       form.name = ''
       form.email = ''
+      
+      // Refresh the table with new data (temporarily disabled)
+      // await fetchUsers()
     } else {
       isSuccess.value = false
-      const data = await response.json()
-      message.value = data.message || 'Failed to send email. Please try again.'
+      message.value = data.message || 'Failed to save data. Please try again.'
     }
   } catch (error) {
     isSuccess.value = false
-    message.value = 'Network error. Please make sure the backend server as running.'
+    message.value = 'Network error. Please make sure the backend server (and MongoDB) is running.'
   } finally {
     isSubmitting.value = false
     
-    // Clear message after 5 seconds
     setTimeout(() => {
       message.value = ''
     }, 5000)
   }
 }
+
+onMounted(() => {
+  fetchUsers()
+})
 </script>
 
 <style scoped>
